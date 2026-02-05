@@ -1,1 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill_trend_fetcher contract",
+  "description": "Input and output JSON Schemas for the skill_trend_fetcher. All artifacts MUST include spec_version.",
+  "inputSchema": {
+    "title": "TrendFetcherInput",
+    "type": "object",
+    "properties": {
+      "request_id": { "type": "string" },
+      "source_id": { "type": "string" },
+      "fetch_parameters": {
+        "type": "object",
+        "properties": {
+          "since": { "type": "string", "format": "date-time" },
+          "until": { "type": "string", "format": "date-time" },
+          "max_items": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["since", "until"],
+        "additionalProperties": false
+      },
+      "actor_id": { "type": "string" },
+      "spec_version": { "type": "string" }
+    },
+    "required": ["request_id", "source_id", "fetch_parameters", "actor_id", "spec_version"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "title": "TrendFetcherOutput",
+    "type": "object",
+    "properties": {
+      "ingest_event_id": { "type": "string" },
+      "request_id": { "type": "string" },
+      "source_id": { "type": "string" },
+      "fetched_at": { "type": "string", "format": "date-time" },
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "item_id": { "type": "string" },
+            "payload_ref": {
+              "type": "object",
+              "properties": {
+                "uri": { "type": "string" },
+                "digest": { "type": "string" },
+                "size": { "type": "integer", "minimum": 0 }
+              },
+              "required": ["uri", "digest", "size"],
+              "additionalProperties": false
+            },
+            "canonical_id": { "type": "string" },
+            "timestamp": { "type": "string", "format": "date-time" },
+            "metadata": { "type": "object", "properties": { "tags": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": true }
+          },
+          "required": ["item_id", "payload_ref", "canonical_id", "timestamp"],
+          "additionalProperties": false
+        }
+      },
+      "provenance": { "type": "array", "items": { "type": "string" } },
+      "spec_version": { "type": "string" }
+    },
+    "required": ["ingest_event_id", "request_id", "items", "provenance", "spec_version"],
+    "additionalProperties": false
+  },
+  "invariants": [
+    "Requests with identical request_id, source_id, fetch_parameters, and spec_version MUST be idempotent and return the same ingest_event_id and items ordering.",
+    "Every item payload_ref.digest MUST be present and stable.",
+    "All outputs MUST include spec_version for traceability."
+  ]
+}
 {}

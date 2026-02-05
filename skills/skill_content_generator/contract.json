@@ -1,1 +1,70 @@
-{}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill_content_generator contract",
+  "description": "Input and output JSON Schemas for the skill_content_generator. All artifacts MUST include spec_version.",
+  "inputSchema": {
+    "title": "ContentGeneratorInput",
+    "type": "object",
+    "properties": {
+      "request_id": { "type": "string" },
+      "candidate_id": { "type": "string" },
+      "input_provenance": { "type": "array", "items": { "type": "string" } },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "variant_count": { "type": "integer", "minimum": 1 },
+          "target_platforms": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["variant_count"],
+        "additionalProperties": false
+      },
+      "actor_id": { "type": "string" },
+      "spec_version": { "type": "string" }
+    },
+    "required": ["request_id", "candidate_id", "input_provenance", "parameters", "actor_id", "spec_version"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "title": "ContentGeneratorOutput",
+    "type": "object",
+    "properties": {
+      "artifact_id": { "type": "string" },
+      "request_id": { "type": "string" },
+      "candidate_id": { "type": "string" },
+      "created_at": { "type": "string", "format": "date-time" },
+      "created_by": { "type": "string" },
+      "title": { "type": "string" },
+      "description": { "type": "string" },
+      "variants": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "variant_id": { "type": "string" },
+            "text": { "type": "string" },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "tags": { "type": "array", "items": { "type": "string" } },
+                "estimated_risk_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+              },
+              "required": ["estimated_risk_score"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["variant_id", "text", "metadata"],
+          "additionalProperties": false
+        }
+      },
+      "provenance": { "type": "array", "items": { "type": "string" } },
+      "spec_version": { "type": "string" }
+    },
+    "required": ["artifact_id", "request_id", "variants", "provenance", "spec_version"],
+    "additionalProperties": false
+  },
+  "invariants": [
+    "Requests with identical request_id, candidate_id, input_provenance, parameters, and spec_version SHOULD produce identical variants ordering and content.",
+    "variants[].metadata.estimated_risk_score MUST be within [0.0, 1.0].",
+    "All outputs MUST include spec_version for traceability."
+  ]
+}

@@ -1,1 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill_engagement_manager contract",
+  "description": "Input and output JSON Schemas for the skill_engagement_manager. All artifacts MUST include spec_version.",
+  "inputSchema": {
+    "title": "EngagementManagerInput",
+    "type": "object",
+    "properties": {
+      "request_id": { "type": "string" },
+      "artifact_id": { "type": "string" },
+      "candidate_context": {
+        "type": "object",
+        "properties": {
+          "target_platforms": { "type": "array", "items": { "type": "string" } },
+          "audience_constraints": { "type": "object", "additionalProperties": { "type": "string" } }
+        },
+        "additionalProperties": false
+      },
+      "actor_id": { "type": "string" },
+      "spec_version": { "type": "string" },
+      "approval_reference": { "anyOf": [ { "type": "string" }, { "type": "null" } ] }
+    },
+    "required": ["request_id", "artifact_id", "actor_id", "spec_version", "approval_reference"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "title": "EngagementManagerOutput",
+    "type": "object",
+    "properties": {
+      "proposal_id": { "type": "string" },
+      "request_id": { "type": "string" },
+      "artifact_id": { "type": "string" },
+      "proposed_actions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "action_id": { "type": "string" },
+            "action_type": { "type": "string" },
+            "target": { "type": "string" },
+            "scheduled_time": { "anyOf": [ { "type": "string", "format": "date-time" }, { "type": "null" } ] },
+            "estimated_impact": { "type": "object", "additionalProperties": { "type": "number" } },
+            "approval_required": { "const": true }
+          },
+          "required": ["action_id", "action_type", "target", "approval_required"],
+          "additionalProperties": false
+        }
+      },
+      "provenance": { "type": "array", "items": { "type": "string" } },
+      "spec_version": { "type": "string" }
+    },
+    "required": ["proposal_id", "request_id", "proposed_actions", "provenance", "spec_version"],
+    "additionalProperties": false
+  },
+  "invariants": [
+    "For identical request_id, artifact_id, candidate_context, and spec_version, the proposal MUST be stable and idempotent.",
+    "All proposed actions MUST set approval_required to true.",
+    "The skill MUST NOT execute proposed actions; execution requires an approval_reference and an out-of-skill executor."
+  ]
+}
 {}
