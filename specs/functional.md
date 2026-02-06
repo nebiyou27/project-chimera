@@ -269,3 +269,103 @@ intentionally omitted.
   artifact in `specs/policies/`.
 - This specification defines WHAT must be delivered; implementation choices are
   left to implementers, who must demonstrate compliance via reproducible tests.
+
+---
+
+## Executable Acceptance Scenarios (Gherkin)
+Derived from Spec Kit artifacts: Constitution, Product Spec, Technical Plan, Tasks
+
+### 1) Trend ingestion dedupe + failure logging
+Feature: Trend ingestion deduplication and failure recording
+  Scenario: Happy path - ingest unique events
+    Given a configured source with two non-duplicate payloads within window
+    When the ingest is executed for that window
+    Then the ledger MUST contain an `ingest.requested` and `ingest.executed` event
+    And the output batch MUST contain both payloads with distinct payload digests
+
+  Scenario: Edge case - duplicate payloads in same window
+    Given two events with identical canonical source id and identical payload digest
+    When the ingest is executed for that window
+    Then the system MUST emit a single canonical event for that payload
+    And the ledger MUST record a deduplication event referencing the suppressed payload id
+
+  Scenario: Failure mode - source unreachable
+    Given a source that returns network error on fetch
+    When the ingest attempt is performed
+    Then the system MUST emit an `ingest.failed` ledger entry with ErrorObject
+    And retries MUST be recorded in ledger with backoff metadata until retry budget exhausted
+
+### 2) Deterministic ranking for same inputs/spec_version
+Feature: Signal aggregation determinism
+  Scenario: Happy path - identical inputs produce identical ranking
+    Given identical ingestion event batch A and spec_version V
+    When aggregation runs twice with the same code and config
+    Then both runs MUST produce the same ordered candidate list and same scores
+
+  Scenario: Edge case - non-deterministic source flagged
+    Given a source marked non-deterministic in metadata
+    When aggregation runs
+    Then outputs MUST include `metadata.non_deterministic: true` and include seed values
+
+  Scenario: Failure mode - missing spec_version
+    Given inputs lacking spec_version
+    When aggregation is invoked
+    Then the service MUST return an ErrorObject and ledger `error` entry; processing MUST stop
+
+### 3) Approval workflow expiry + justification rules
+Feature: Approval expiry and justification enforcement
+  Scenario: Happy path - approver provides justification within expiry
+    Given an approval request with expiry set to T+24h
+    And approver approves with structured justification
+    When approval is recorded
+    Then a ledger `approval.created` event MUST be written with justification fields
+
+  Scenario: Edge case - approval expired
+    Given an approval request past expiry
+    When an approver attempts to approve
+    Then the system MUST reject the approval and revert artifact to `Draft`
+    And ledger MUST contain `approval.expired` event
+
+  Scenario: Failure mode - missing justification
+    Given an approver submits approval without justification when policy requires it
+    When approval is submitted
+    Then the system MUST reject submission with ErrorObject and create ledger `approval.rejected`
+
+### 4) Publishing gating (reject without valid approval_reference_id)
+Feature: Publish gating by approval reference
+  Scenario: Happy path - publish with valid approval
+    Given an approval_id that exists in ledger and matches artifact and spec_version
+    When publish is requested with that approval_id
+    Then orchestrator MUST perform external publish and create `publish.executed` ledger entry
+
+  Scenario: Edge case - approval_id mismatch
+    Given an approval_id that exists but references a different artifact
+    When publish is requested with that approval_id
+    Then publish MUST be rejected and `publish.failed` ledger entry created with reason `approval_mismatch`
+
+  Scenario: Failure mode - missing approval_id
+    Given a publish request lacking approval_id
+    When publish is requested
+    Then the system MUST reject with ErrorObject and record `publish.rejected` in ledger
+
+### 5) Audit / provenance query completeness
+Feature: Audit and provenance completeness
+  Scenario: Happy path - full provenance returned
+    Given an artifact id with complete history
+    When auditor queries provenance by artifact id
+    Then the system MUST return a chain of events from ingestion to current state
+    And each event MUST include spec_version, actor_id, timestamp, and payload_digest
+
+  Scenario: Edge case - partial retention window
+    Given older events beyond retention policy removed
+    When auditor queries full provenance
+    Then system MUST return available events and a `provenance.incomplete` flag with retention policy id
+
+  Scenario: Failure mode - ledger read failure
+    Given the ledger service unavailable
+    When an audit query is performed
+    Then the system MUST return ErrorObject and create `audit.query.failed` ledger entry
+
+### Non-functional requirements (additions)
+- NFR-1 Response time: Aggregation and ranking API endpoints MUST return within 2 seconds (p95) for input batches ≤ 500 items under normal load.
+- NFR-2 Queue handling: Trend Queue MUST handle max queue depth of 10,000 pending requests; when queue depth exceeds 8,000, system MUST emit `queue.high_watermark` ledger events and apply backpressure to new ingest requests.
