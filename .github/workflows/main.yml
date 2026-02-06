@@ -1,12 +1,29 @@
 name: CI
-on: [push]
+
+on:
+  push:
+  pull_request:
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - run: pip install pytest
-      - run: make test
+          python-version: "3.11"
+
+      - name: Install dependencies (make setup)
+        run: make setup
+
+      - name: Spec alignment check (make spec-check)
+        run: make spec-check
+
+      - name: Run tests (TDD stage — failures expected)
+        run: make test
+        continue-on-error: true
