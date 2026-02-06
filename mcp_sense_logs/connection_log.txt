@@ -1,0 +1,17 @@
+Timestamp: 2026-02-06 14:26:13
+
+Log Snippet:
+2026-02-02 14:46:41.813 [info] Stopping server tenxfeedbackanalytics
+2026-02-02 14:46:43.062 [info] Connection state: Stopped
+2026-02-02 14:46:51.695 [info] Starting server tenxfeedbackanalytics
+2026-02-02 14:46:51.706 [info] Connection state: Starting
+2026-02-02 14:46:51.706 [info] Starting server from LocalProcess extension host
+2026-02-02 14:46:51.706 [info] Connection state: Running
+2026-02-02 14:46:53.148 [warning] Error fetching resource metadata: Error: Failed to fetch resource metadata from https://mcppulse.10academy.org/.well-known/oauth-protected-resource: 404 Not Found
+2026-02-02 14:46:53.149 [info] Discovered resource metadata at https://mcppulse.10academy.org/.well-known/oauth-protected-resource/proxy
+2026-02-02 14:46:53.149 [info] Using auth server metadata url: https://mcppulse.10academy.org/
+2026-02-02 14:46:53.317 [info] Discovered authorization server metadata at https://mcppulse.10academy.org/.well-known/oauth-authorization-server
+2026-02-02 14:46:55.197 [info] Discovered 3 tools
+2026-02-02 16:06:46.554 [warning] Extension host shut down, server will stop.
+2026-02-02 16:06:46.554 [info] Connection state: Stopped
+Note: This log proves Tenx MCP Sense was active in the IDE.
