@@ -58,4 +58,3 @@
     "The skill MUST NOT execute proposed actions; execution requires an approval_reference and an out-of-skill executor."
   ]
 }
-{}

@@ -1,0 +1,38 @@
+# CodeRabbit configuration (AI Review Policy)
+# Focus: Spec Alignment + Security Vulnerabilities
+
+reviews:
+  auto_review:
+    enabled: true
+
+  instructions: |
+    You are the AI reviewer for Project Chimera.
+
+    Review priorities (in order):
+
+    1) Spec Alignment
+       - Verify changes align with `specs/_meta.md`, `specs/functional.md`, `specs/technical.md`.
+       - Ensure any behavior changes are reflected in specs (no silent changes).
+       - Ensure `skills/*/contract.json` remains valid JSON and includes `spec_version`.
+       - Ensure tests in `tests/` reflect documented contracts (TDD failing tests are acceptable until implementations exist).
+
+    2) Security Vulnerabilities
+       - Flag secrets (tokens/keys), insecure subprocess usage, unsafe file/network access, and overly broad permissions.
+       - Enforce least privilege and HITL gating for externally observable actions.
+       - Flag dependency risks and unsafe default configurations.
+
+    Output format:
+    - Short summary
+    - Spec-alignment checklist
+    - Security checklist
+    - Minimal concrete fixes
+
+  path_filters:
+    - "specs/**"
+    - "skills/**"
+    - "tests/**"
+    - "scripts/**"
+    - ".github/workflows/**"
+    - "Dockerfile"
+    - "Makefile"
+    - "requirements.txt"

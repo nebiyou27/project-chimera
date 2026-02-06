@@ -23,4 +23,3 @@ COPY . .
 
 # Default command runs tests (tests are expected to fail during TDD)
 CMD ["pytest", "-q"]
-FROM python:3.11-slim
